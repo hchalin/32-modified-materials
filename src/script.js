@@ -69,17 +69,20 @@ const material = new THREE.MeshStandardMaterial({
   normalMap: normalTexture,
 });
 
+const depthMaterial = new THREE.MeshDepthMaterial({
+  depthPacking: THREE.RGBADepthPacking,
+})
+
 const customUniforms = {
-  uTime: {value: 0},
-}
+  uTime: { value: 0 },
+};
 
 // Allows access to shader before compile(vertex, fragment, uniforms)
 material.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = customUniforms.uTime
+  shader.uniforms.uTime = customUniforms.uTime;
 
-    shader.vertexShader = shader
-    .vertexShader
-    .replace('#include <common>',
+  shader.vertexShader = shader.vertexShader.replace(
+    "#include <common>",
     `
     #include <common>
 
@@ -89,10 +92,10 @@ material.onBeforeCompile = (shader) => {
       return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
     }
 
-    `)
-    shader.vertexShader = shader
-    .vertexShader
-    .replace('#include <begin_vertex>',
+    `
+  );
+  shader.vertexShader = shader.vertexShader.replace(
+    "#include <begin_vertex>",
     `
     #include <begin_vertex>
 
@@ -103,12 +106,11 @@ material.onBeforeCompile = (shader) => {
     transformed.xz = rotateMatrix * transformed.xz;
 
 
-    `)
+    `
+  );
 };
 
-// mat2 get2dRotateMatrix(angle){
-//   return mat2(cos(angle), - sin(angle), sin(angle), cos(angle));
-// }
+
 
 /**
  * Models
@@ -118,11 +120,24 @@ gltfLoader.load("/models/LeePerrySmith/LeePerrySmith.glb", (gltf) => {
   const mesh = gltf.scene.children[0];
   mesh.rotation.y = Math.PI * 0.5;
   mesh.material = material;
+  mesh.customDepthMaterial = depthMaterial;
   scene.add(mesh);
 
   // Update materials
   updateAllMaterials();
 });
+
+/**
+ * Plane
+ */
+const plane = new THREE.Mesh(
+  new THREE.PlaneGeometry(15, 15, 15),
+  new THREE.MeshStandardMaterial()
+);
+plane.rotation.y = Math.PI;
+plane.position.y -=  5;
+plane.position.z =  5;
+scene.add(plane);
 
 /**
  * Lights
